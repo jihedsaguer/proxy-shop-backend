@@ -7,7 +7,7 @@ export class Permission {
   id: string;
 
   @Column({ unique: true })
-  action: string; // e.g., 'create_user', 'buy_product'
+  action: string; 
 
   @Column({ nullable: true })
   description: string;

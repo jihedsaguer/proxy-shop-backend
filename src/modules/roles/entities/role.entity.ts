@@ -8,14 +8,14 @@ export class Role {
   id: string;
 
   @Column({ unique: true })
-  name: string; // e.g., 'admin', 'client'
+  name: string; 
 
   @Column({ nullable: true })
   description: string;
 
   @ManyToMany(() => Permission, (permission) => permission.roles, { eager: true })
   @JoinTable({
-    name: 'roles_permissions', // junction table
+    name: 'roles_permissions', 
     joinColumn: { name: 'role_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
   })
