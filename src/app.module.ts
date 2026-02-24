@@ -20,7 +20,10 @@ import { getDatabaseConfig } from './database/database.config';
       useFactory: (configService: ConfigService) =>
         getDatabaseConfig(configService),
     }),
-    UsersModule, RolesModule, PermissionsModule, AuthModule],
+    UsersModule,
+     RolesModule,
+      PermissionsModule,
+       AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })

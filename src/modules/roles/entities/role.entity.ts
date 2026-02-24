@@ -21,6 +21,6 @@ export class Role {
   })
   permissions: Permission[];
 
-  @ManyToMany(() => User, (user) => user.roles)
+  @ManyToMany(() => User, (user) => user.role)
   users: User[];
 }

@@ -9,7 +9,7 @@ import { Body, Param, Patch, Delete, Get, Post } from '@nestjs/common';
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
-  @Post()
+  @Post('create')
   create(@Body() createRoleDto: CreateRoleDto) {
     return this.rolesService.create(createRoleDto);
   }
@@ -32,5 +32,13 @@ export class RolesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.rolesService.remove(id);
+  }
+
+  @Post(':id/permissions')
+  assignPermissions(
+    @Param('id') id: string,
+    @Body('permissionIds') permissionIds: string[],
+  ) {
+    return this.rolesService.assignPermissions(id, permissionIds);
   }
 }

@@ -1,15 +1,22 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { permission } from 'process';
+import { Permission } from '../permissions/entities/permission.entity';
 @Injectable()
 export class RolesService {
-    constructor( @InjectRepository(Role) private readonly roleRepository: Repository<Role>) {}
+    constructor(
+         @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
+         @InjectRepository(Permission) private readonly permissionRepository: Repository<Permission>
+               
+) {}
 
     async create(createRoleDto: CreateRoleDto): Promise<Role> {
-        const existing = await this.roleRepository.findOne({ where: { name: createRoleDto.name } });
-        if (existing) {
+        const exists = await this.roleRepository.exists({ where: { name: createRoleDto.name } });
+        if (exists) {
             throw new ConflictException('Role with this name already exists');
         }
         const role = this.roleRepository.create(createRoleDto);
@@ -27,7 +34,7 @@ export class RolesService {
         }
         return role;
     }
-    async update(id: string, updateRoleDto: CreateRoleDto): Promise<Role> {
+    async update(id: string, updateRoleDto: UpdateRoleDto): Promise<Role> {
         const role = await this.findOne(id);
         if (updateRoleDto.name) {
             const existing = await this.roleRepository.findOne({ where: { name: updateRoleDto.name } });
@@ -43,5 +50,21 @@ export class RolesService {
         const role = await this.findOne(id);
         await this.roleRepository.remove(role);
     }
-    
+
+
+    async assignPermissions( roleId: string, permissionIds: string[],): Promise<Role> {
+  const role = await this.findOne(roleId);
+
+  const permissions = await this.permissionRepository.findBy({
+    id: In(permissionIds),
+  });
+
+  if (permissions.length !== permissionIds.length) {
+    throw new NotFoundException('One or more permissions not found');
+  }
+
+  role.permissions = permissions;
+
+  return this.roleRepository.save(role);
 }
+    }
