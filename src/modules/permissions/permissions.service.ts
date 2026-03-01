@@ -11,7 +11,6 @@ export class PermissionsService {
     @InjectRepository(Permission)
     private readonly permissionRepository: Repository<Permission>,
   ) {}
-
  
   async create(createPermissionDto: CreatePermissionDto): Promise<Permission> {
     const existing = await this.permissionRepository.findOne({

@@ -1,6 +1,6 @@
 import { Injectable,NotFoundException,ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,8 +16,8 @@ export class UsersService {
  
 ) {}
 
-  async create(dto: CreateUserDto): Promise<User> {
-    const { email, phone, username, password, roleId } = dto;
+  async create(dto: CreateUserDto): Promise<Omit<User, 'password'>> {
+    const { email, phone, firstName, lastName, password, roleId } = dto;
 
     const emailExists = await this.usersRepository.findOne({
       where: { email },
@@ -26,11 +26,18 @@ export class UsersService {
       throw new ConflictException('Email already exists');
     }
 
-    const usernameExists = await this.usersRepository.findOne({
-      where: { username },
+    const firstNameExists = await this.usersRepository.findOne({
+      where: { firstName },
     });
-    if (usernameExists) {
-      throw new ConflictException('Username already exists');
+    if (firstNameExists) {
+      throw new ConflictException('First name already exists');
+    }
+
+    const lastNameExists = await this.usersRepository.findOne({
+      where: { lastName },
+    });
+    if (lastNameExists) {
+      throw new ConflictException('Last name already exists');
     }
 
     if (phone) {
@@ -55,21 +62,32 @@ export class UsersService {
     const user = this.usersRepository.create({
       email,
       phone,
-      username,
+      firstName,
+      lastName,
       password: hashedPassword,
       role,
     });
 
-    return this.usersRepository.save(user);
+    const saved = await this.usersRepository.save(user);
+    // strip password before returning
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _pw, ...result } = saved as any;
+    return result;
   }
 
 
   //get all users 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find({ relations: ['role'] });
+  async findAll(): Promise<Omit<User, 'password'>[]> {
+    const users = await this.usersRepository.find({ relations: ['role'] });
+    return users.map((u) => {
+      // password not selected by default thanks to entity config, but guard anyway
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...rest } = u as any;
+      return rest;
+    });
   }
     //get user by id
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string): Promise<Omit<User, 'password'>> {
     const user = await this.usersRepository.findOne({
       where: { id },
       relations: ['role'],
@@ -79,12 +97,25 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    // remove password if it came back for any reason
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...rest } = user as any;
+    return rest;
   }
 
    //update users 
-  async update(id: string, dto: UpdateUserDto): Promise<User> {
-    const user = await this.findOne(id);
+  async update(id: string, dto: UpdateUserDto): Promise<Omit<User, 'password'>> {
+    // fetch full entity including password so we can modify it
+    const existing = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['role'],
+      select: ['id', 'email', 'phone', 'password', 'role', 'isActive'],
+    });
+    if (!existing) {
+      throw new NotFoundException('User not found');
+    }
+    const user = existing as User;
+
     if (dto.email && dto.email !== user.email) {
         const emailExists = await this.usersRepository.findOne({
             where: { email: dto.email },
@@ -94,14 +125,23 @@ export class UsersService {
         }
         user.email = dto.email;
     }
-    if (dto.username && dto.username !== user.username) {
-        const usernameExists = await this.usersRepository.findOne({
-            where: { username: dto.username },
+    if (dto.firstName && dto.firstName !== user.firstName) {
+        const firstNameExists = await this.usersRepository.findOne({
+            where: { firstName: dto.firstName },
         });
-        if (usernameExists) {
-            throw new ConflictException('Username already exists');
+        if (firstNameExists) {
+            throw new ConflictException('First name already exists');
         }
-        user.username = dto.username;
+        user.firstName = dto.firstName;
+    }
+    if (dto.lastName && dto.lastName !== user.lastName) {
+        const lastNameExists = await this.usersRepository.findOne({
+            where: { lastName: dto.lastName },
+        });
+        if (lastNameExists) {
+            throw new ConflictException('Last name already exists');
+        }
+        user.lastName = dto.lastName;
     }
     if (dto.phone && dto.phone !== user.phone) {
         const phoneExists = await this.usersRepository.findOne({
@@ -128,16 +168,23 @@ export class UsersService {
     if (typeof dto.isActive === 'boolean') {
         user.isActive = dto.isActive;
     }
-    return this.usersRepository.save(user);
+    const updated = await this.usersRepository.save(user);
+    // strip password
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...rest } = updated as any;
+    return rest;
 }
    // delete users 
     async remove(id: string): Promise<void> {
-        const user = await this.findOne(id);
+        const user = await this.usersRepository.findOne({ where: { id } });
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
         await this.usersRepository.remove(user);
     }
 
 
-    async findByEmail(email: string): Promise<User> {
+    async findByEmail(email: string): Promise<Omit<User, 'password'>> {
         const user = await this.usersRepository.findOne({
             where: { email },
             relations: ['role'],
@@ -145,6 +192,9 @@ export class UsersService {
         if (!user) {
             throw new NotFoundException('User not found');
         }
-        return user;
+        // password should never be returned
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password, ...rest } = user as any;
+        return rest;
     }
 }

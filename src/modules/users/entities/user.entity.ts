@@ -17,13 +17,20 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({unique: true })
-  username: string;
+  @Column({nullable: true, unique: true })
+  firstName: string;
+
+  @Column({nullable: true, unique: true })
+  lastName: string;
+  
   @Column({ nullable: true, unique: true })
   phone?: string;
 
-  @Column()
-  password: string; 
+  @Column({ select: false })
+  password: string;
+
+   @Column({  type: 'varchar',nullable: true })
+  refreshToken: string | null;
 
   @ManyToOne(() => Role, { eager: true })
   @JoinColumn({ name: 'role_id' })
@@ -31,6 +38,9 @@ export class User {
 
   @Column({ default: true })
   isActive: boolean;
+
+
+ 
 
   @CreateDateColumn()
   createdAt: Date;
