@@ -13,6 +13,9 @@ export class RegisterDto {
   lastName: string;
 
   @IsNotEmpty()
+  phone?: string;
+
+  @IsNotEmpty()
   @MinLength(6)
   password: string;
 }

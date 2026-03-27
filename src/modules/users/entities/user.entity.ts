@@ -17,10 +17,10 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({nullable: true, unique: true })
+  @Column({nullable: true })
   firstName: string;
 
-  @Column({nullable: true, unique: true })
+  @Column({nullable: true })
   lastName: string;
   
   @Column({ nullable: true, unique: true })
@@ -32,15 +32,18 @@ export class User {
    @Column({  type: 'varchar',nullable: true })
   refreshToken: string | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  resetToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  resetTokenExpiresAt: Date | null;
+
   @ManyToOne(() => Role, { eager: true })
   @JoinColumn({ name: 'role_id' })
   role: Role;
 
   @Column({ default: true })
   isActive: boolean;
-
-
- 
 
   @CreateDateColumn()
   createdAt: Date;

@@ -5,6 +5,7 @@ import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ProductsModule } from './modules/products/products.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { getDatabaseConfig } from './database/database.config';
@@ -23,7 +24,8 @@ import { getDatabaseConfig } from './database/database.config';
     UsersModule,
      RolesModule,
       PermissionsModule,
-       AuthModule],
+       AuthModule,
+       ProductsModule],
   controllers: [AppController],
   providers: [AppService],
 })
